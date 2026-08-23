@@ -1,0 +1,12 @@
+Reference,Value,Footprint,Qty,Uwagi / Notes
+U1,AMS1117-3.3,SOT-223,1,"LDO 3V3/1A; alt: ME6211C33 (lepsze dropout przy USB 5V)"
+U2,ESP32-C3FH4,ESP32-C3-WROOM-02,1,"Modul WROOM-02; 4MB flash wewnetrznie; BLE5 (OTA z telefonu)"
+U3,E28-900M22S,Ebyte castellated 15x28mm,1,"SX1276 + PA + LNA; 868/915; zlacze krawedziowe"
+C1,10u/16V X7R 0805,C_0805,1,"Wejscie LDO"
+C2,22u/10V X7R 0805,C_0805,1,"Wyjscie LDO"
+C3-C5,(patrz notatka),C_0402,3,"100n przy kazdym VCC modulu radiowego i MCU - DODAC w rewizji v1.1 schematu"
+R1,1k 0603,R_0603,1,"Rezystor LED"
+D1,LED zielony 0603,LED_0603,1,"Status linku (GPIO8)"
+SW1,Micro switch PTS645,SW_SPST,1,"Bind (GPIO9/BOOT)"
+P1,JST-GH 4pin 1.25mm,BM04B-GHS-TBT,1,"CRSF do FC: 5V TX RX GND"
+J1,SMA edge mount,-,1,"Antena; dopuszczalny U.FL zamiast SMA"

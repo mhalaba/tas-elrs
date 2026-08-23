@@ -1,5 +1,7 @@
 # TAS-ELRS v2 — Enlace C2 endurecido basado en ExpressLRS 4.1.0
 
+> **Licencia:** el fork completo es **GPL-3.0** (heredado de ExpressLRS) · nuestros archivos totalmente originales (`src/lib/TAS/*`, docs, tests) están además bajo **MIT** — detalles en `NOTICE` y la sección *Licencia* más abajo.
+
 > **Idiomas:** [Polski](../TAS_README.md) · [English](TAS_README_EN.md) · [Українська](TAS_README_UK.md) · **Español** · [Português](TAS_README_PT.md)
 
 > Documento escrito desde la perspectiva de un equipo de ingeniería que trabaja

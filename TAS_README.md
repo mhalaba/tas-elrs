@@ -1,5 +1,7 @@
 # TAS-ELRS v2 — utwardzone łącze C2 na bazie ExpressLRS 4.1.0
 
+> **Licencja:** cały fork **GPL-3.0** (dziedziczona z ExpressLRS) · nasze w pełni autorskie pliki (`src/lib/TAS/*`, docs, testy) dodatkowo **MIT** — szczegóły: `NOTICE` i sekcja *Licencja* poniżej.
+
 > Dokument pisany głosem zespołu inżynierskiego działającego przy dronach i EW
 > na Ukrainie od 2022 r.: RF/firmware, kryptografia, szkolenia operatorów,
 > naprawy w warunkach polowych. Wszystkie decyzje projektowe w tym repo
@@ -255,3 +257,6 @@ Jeśli projekt Ci pomógł: [**postaw nam kawę → buycoffee.to/maha**](https:/
 - test właściwości: wszystkie 54 pojedyncze bit-flipy payloadu/nagłówka odrzucane,
 - naprawa builda PIO biblioteki TAS (library.json + test_ignore) — CI upstreamu ELRS przechodzi,
 - własny workflow CI (`tas-tests`) + selftest KDF w suite.
+
+## Sprzęt
+Referencyjna elektronika (KiCad, BOM, hardware-def): [`hardware/`](hardware/README.md) — TAS-RX-900-C3 v1.0 zgodny z targetem `Unified_ESP32C3_900_RX`.

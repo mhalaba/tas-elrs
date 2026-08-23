@@ -1,5 +1,7 @@
 # TAS-ELRS v2 — Hardened C2 link based on ExpressLRS 4.1.0
 
+> **License:** the fork as a whole is **GPL-3.0** (inherited from ExpressLRS) · our fully original files (`src/lib/TAS/*`, docs, tests) are additionally **MIT** — see `NOTICE` and the *License* section below.
+
 > **Languages / Języki:** [Polski](../TAS_README.md) · **English** · [Українська](TAS_README_UK.md) · [Español](TAS_README_ES.md) · [Português](TAS_README_PT.md)
 
 > This document is written from the perspective of an engineering team that has
@@ -257,3 +259,6 @@ If this project helped you: [**buy us a coffee → buycoffee.to/maha**](https://
 - property test: all 54 single-bit payload/header flips rejected,
 - fixed PIO library build for TAS (library.json + test_ignore) — upstream ELRS CI passes again,
 - dedicated CI workflow (`tas-tests`) + KDF selftest in the suite.
+
+## Hardware
+Reference electronics (KiCad, BOM, hardware-def): [`hardware/`](../hardware/README.md) — TAS-RX-900-C3 v1.0, pin-compatible with the `Unified_ESP32C3_900_RX` target.
