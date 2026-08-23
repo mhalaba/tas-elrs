@@ -166,8 +166,8 @@ int8_t SwitchModePending;
 
 int32_t PfdPrevRawOffset;
 RXtimerState_e RXtimerState;
-uint32_t GotConnectionTaslis = 0;
-const uint32_t ConsiderConnGoodTaslis = 1000; // minimum time before we can consider a connection to be 'good'
+uint32_t GotConnectionMillis = 0;
+const uint32_t ConsiderConnGoodMillis = 1000; // minimum time before we can consider a connection to be 'good'
 bool doStartTimer = false;
 
 ///////////////////////////////////////////////
@@ -813,7 +813,7 @@ void LostConnection(bool resumeRx)
     RXtimerState = tim_disconnected;
     hwTimer::resetFreqOffset();
     PfdPrevRawOffset = 0;
-    GotConnectionTaslis = 0;
+    GotConnectionMillis = 0;
     uplinkLQ = 0;
     LQCalc.reset();
     LQCalcDVDA.reset();
@@ -875,7 +875,7 @@ void GotConnection(unsigned long now)
 
     setConnectionState(connected); //we got a packet, therefore no lost connection
     RXtimerState = tim_tentative;
-    GotConnectionTaslis = now;
+    GotConnectionMillis = now;
     webserverPreventAutoStart = true;
 
     if (firmwareOptions.is_airport)
@@ -1057,7 +1057,7 @@ static bool ICACHE_RAM_ATTR ProcessRfPacket_SYNC(uint32_t const now, OTA_Sync_s 
     // Check if otaProtocol has been updated.
     if (config.IsModified())
     {
-        deferExecutionTaslis(100, [](){
+        deferExecutionMillis(100, [](){
             reconfigureSerial();
         });
     }
@@ -1271,7 +1271,7 @@ void DataUlReceiveComplete()
     case MSP_ELRS_SET_RX_WIFI_MODE: //0x0E
         // The MSP packet needs to be ACKed so the TX doesn't
         // keep sending it, so defer the switch to wifi
-        deferExecutionTaslis(500, []() {
+        deferExecutionMillis(500, []() {
             setWifiUpdateMode();
         });
         break;
@@ -1561,7 +1561,7 @@ static void setupConfigAndPocCheck()
     }
 
     // Set a deferred function to clear the power on counter if the RX has been running for more than 2s
-    deferExecutionTaslis(2000, []() {
+    deferExecutionMillis(2000, []() {
         if (connectionState != connected && config.GetPowerOnCounter() != 0)
         {
             config.SetPowerOnCounter(0);
@@ -2179,7 +2179,7 @@ void loop()
 
     checkSendLinkStatsToFc(now);
 
-    if ((RXtimerState == tim_tentative) && ((now - GotConnectionTaslis) > ConsiderConnGoodTaslis) && (abs(LPF_OffsetDx.value()) <= 5))
+    if ((RXtimerState == tim_tentative) && ((now - GotConnectionMillis) > ConsiderConnGoodMillis) && (abs(LPF_OffsetDx.value()) <= 5))
     {
         RXtimerState = tim_locked;
         DBGLN("Timer locked");
