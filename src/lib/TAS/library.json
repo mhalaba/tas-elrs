@@ -1,0 +1,6 @@
+{
+    "name": "TAS",
+    "version": "2.1.0",
+    "description": "TAS-ELRS hardening: crypto, anti-replay, jam classification, watchdog, wake token",
+    "dependencies": ["CRC", "FIFO", "OTA", "FHSS", "logging"]
+}

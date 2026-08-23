@@ -19,6 +19,7 @@
 #include "TasFailsafe.h"
 #include "TasWake.h"
 #include "TasTelemetry.h"
+#include "TasAfh.h"
 #endif
 
 #include "rx-serial/SerialIO.h"
@@ -177,6 +178,9 @@ static bool alreadyTLMresp = false;
 
 ///////Variables for Telemetry and Link Quality///////////////
 uint32_t LastValidPacket = 0;           //Time the last valid packet was recv
+#ifdef TAS_HARDENING
+static TasAfhCtx_s tasAfhCtx; // per-channel freshness for TAS jam reporting
+#endif
 uint32_t LastSyncPacket = 0;            //Time the last valid packet was recv
 
 static uint32_t SendLinkStatstoFCintervalLastSent;
@@ -1200,6 +1204,23 @@ bool ICACHE_RAM_ATTR ProcessRFPacket(SX12xxDriverCommon::rx_status const status)
 
     // Received a packet, that's the definition of LQ
     LQCalc.add();
+
+#ifdef TAS_HARDENING
+    // Per-channel freshness + link-health jam classification, reported to
+    // the FC via TAS_STATUS (0x34). Pure functions; ISR-safe cost.
+    {
+        uint8_t tasCh = !FHSSuseDualBand ? FHSSsequence[FHSSgetCurrIndex()]
+                                         : FHSSsequence_DualBand[FHSSgetCurrIndex()];
+        int16_t rssiAbs = Radio.LastPacketRSSI < 0 ? -(int16_t)Radio.LastPacketRSSI : Radio.LastPacketRSSI;
+        TasAfhNote(&tasAfhCtx, tasCh, (int16_t)(rssiAbs > 255 ? 255 : rssiAbs));
+        if ((OtaNonce & 0x3F) == 0)
+        {
+            uint8_t lq = LQCalc.getLQRaw();
+            TasTelemetrySet(TasAfhJamFromLink(lq, (uint8_t)rssiAbs),
+                            TasAfhNoisyFraction(&tasAfhCtx, FHSSgetChannelCount()));
+        }
+    }
+#endif
     // Extend sync duration since we've received a packet at this rate
     // but do not extend it indefinitely
     RFmodeCycleMultiplier = RFmodeCycleMultiplierSlow;

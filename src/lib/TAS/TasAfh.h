@@ -24,6 +24,11 @@ typedef struct {
     uint16_t prevSpikeEma;               // previous classification cycle mean
 } TasAfhCtx_s;
 
+// Classify jam state from link health (pure function, natively testable).
+// Strong-but-lossy signal is the saturation signature of an active barrage;
+// weak-and-lossy is just range. lqRaw: 0-100, rssiAbs: |RSSI| in dB.
+TasJamStatus_e TasAfhJamFromLink(uint8_t lqRaw, uint8_t rssiAbs);
+
 void TasAfhInit(TasAfhCtx_s *ctx, uint8_t channelCount);
 
 // Record one instantaneous noise-floor observation for a channel.

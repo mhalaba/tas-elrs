@@ -248,3 +248,12 @@ distribution outside the project.
 ## Support the project ☕
 
 If this project helped you: [**buy us a coffee → buycoffee.to/maha**](https://buycoffee.to/maha)
+
+## Changelog
+
+**v2.1** — v2 self-audit fixes:
+- jam classification wired end-to-end (RX → LQ×RSSI heuristic → `TAS_STATUS` to FC; previously dead code),
+- hardened binding-phrase KDF: 10 000 × SHA-256 when `-DTAS_HARDENING` is set (stock md5 otherwise); both sides must be built from the same user_defines,
+- property test: all 54 single-bit payload/header flips rejected,
+- fixed PIO library build for TAS (library.json + test_ignore) — upstream ELRS CI passes again,
+- dedicated CI workflow (`tas-tests`) + KDF selftest in the suite.

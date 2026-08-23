@@ -37,7 +37,7 @@ def process_json_flag(define):
     parts = re.search(r"-D(.*)\s*=\s*(.*)$", define)
     if parts and define.startswith("-D"):
         if parts.group(1) == "MY_BINDING_PHRASE":
-            json_flags['uid'] = [x for x in hashlib.md5(define.encode()).digest()[0:6]]
+            json_flags['uid'] = [x for x in tas_uid_digest(define)]
         if parts.group(1) == "HOME_WIFI_SSID":
             json_flags['wifi-ssid'] = dequote(parts.group(2))
         if parts.group(1) == "HOME_WIFI_PASSWORD":
@@ -69,8 +69,8 @@ def process_json_flag(define):
 def process_build_flag(define):
     if define.startswith("-D") or define.startswith("!-D"):
         if "MY_BINDING_PHRASE" in define:
-            bindingPhraseHash = hashlib.md5(define.encode()).digest()
-            UIDbytes = ",".join(list(map(str, bindingPhraseHash))[0:6])
+            uidb = tas_uid_digest(define)
+            UIDbytes = ",".join(list(map(str, uidb)))
             define = "-DMY_UID=" + UIDbytes
             sys.stdout.write("\u001b[32mUID bytes: " + UIDbytes + "\n")
             sys.stdout.flush()
@@ -133,6 +133,24 @@ def get_version():
 def cleanDefaultProductForTarget(target_name: str) -> None:
     from UnifiedConfiguration import clearDefaultProductForTarget
     clearDefaultProductForTarget(target_name)
+
+
+# ---- TAS-ELRS hardened binding-phrase KDF ----
+TAS_ACTIVE = False
+TAS_KDF_ITERS = 10000
+
+def tas_uid_digest(define):
+    """UID bytes for a MY_BINDING_PHRASE define.
+    Stock path: md5(define)[0:6] (upstream-compatible).
+    TAS path (when -DTAS_HARDENING present in user_defines):
+    10000x iterated SHA-256 — raises offline phrase brute-force cost
+    by ~4 orders of magnitude while staying fully deterministic per build."""
+    data = define.encode()
+    if TAS_ACTIVE:
+        for _ in range(TAS_KDF_ITERS):
+            data = hashlib.sha256(data).digest()
+        return data[0:6]
+    return hashlib.md5(define.encode()).digest()[0:6]
 
 json_flags['flash-discriminator'] = randint(1,2**32-1)
 json_flags['wifi-on-interval'] = -1

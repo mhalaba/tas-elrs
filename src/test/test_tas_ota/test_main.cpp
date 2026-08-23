@@ -99,6 +99,39 @@ int main()
         CHECK(OtaValidatePacketCrc(&syncPkt), "tas: sync validates in foreign slot");
     }
 
+    // --- property: every single-bit flip in the payload region is rejected ---
+    {
+        OTA_Packet_s base, ref, rx;
+        memset(&base, 0, sizeof(base));
+        OtaNonce = 77;
+        OtaPackChannelData(&base, channels, false);
+        ref = base;
+        OtaGeneratePacketCrc(&ref);
+
+        unsigned rejected = 0, total = 0;
+        for (unsigned byte = 1; byte < 7; ++byte)          // encrypted region (OTA4)
+        {
+            for (unsigned bit = 0; bit < 8; ++bit)
+            {
+                rx = ref;
+                ((uint8_t *)&rx)[byte] ^= (uint8_t)(1 << bit);
+                if (!OtaValidatePacketCrc(&rx)) rejected++;
+                total++;
+            }
+        }
+        CHECK(rejected == total, "tas: all 48 payload bit-flips rejected");
+
+        // header type byte flip must not produce a valid DATA frame either
+        for (unsigned bit = 2; bit < 8; ++bit)
+        {
+            rx = ref;
+            ((uint8_t *)&rx)[0] ^= (uint8_t)(1 << bit);
+            if (!OtaValidatePacketCrc(&rx)) rejected++;
+            total++;
+        }
+        CHECK(total == 54 && rejected == total, "tas: header-bit flips also rejected");
+    }
+
     // --- OTA8 fullres ---
     {
         OtaUpdateSerializers(smWideOr8ch, OTA8_PACKET_SIZE);

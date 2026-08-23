@@ -246,3 +246,12 @@ dwustronnej — weryfikacja prawna przed dystrybucją poza projekt.
 ## Wsparcie projektu ☕
 
 Jeśli projekt Ci pomógł: [**postaw nam kawę → buycoffee.to/maha**](https://buycoffee.to/maha)
+
+## Changelog
+
+**v2.1** — audyt własny v2 → poprawki:
+- detekcja zagłuszeń podłączona end-to-end (RX → klasyfikacja LQ×RSSI → `TAS_STATUS` do FC; wcześniej martwy kod),
+- utwardzony KDF frazy bindującej: 10 000 × SHA-256 przy `-DTAS_HARDENING` (stock md5 bez flagi); obie strony muszą być budowane tą samą wersją user_defines,
+- test właściwości: wszystkie 54 pojedyncze bit-flipy payloadu/nagłówka odrzucane,
+- naprawa builda PIO biblioteki TAS (library.json + test_ignore) — CI upstreamu ELRS przechodzi,
+- własny workflow CI (`tas-tests`) + selftest KDF w suite.

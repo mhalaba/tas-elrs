@@ -76,4 +76,9 @@ step "ota stock regression" c++ -std=gnu++11 -w $BASE $INC \
 fi
 
 echo
+# 6) binding KDF selftest (python3 optional)
+if command -v python3 >/dev/null 2>&1; then
+step "binding KDF selftest" python3 "$ROOT/src/python/tas_kdf_selftest.py"
+fi
+
 if [ "$FAIL" = "0" ]; then echo "=== KROK 6: WSZYSTKIE TESTY PASSED ==="; else echo "=== KROK 6: FAILURES ==="; exit 1; fi

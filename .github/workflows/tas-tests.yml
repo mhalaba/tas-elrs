@@ -1,0 +1,13 @@
+name: TAS native tests
+
+on: [push, pull_request]
+
+jobs:
+  native:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run TAS-ELRS native suite
+        run: bash src/test/run_tas_tests.sh
+      - name: Binding KDF selftest
+        run: python3 src/python/tas_kdf_selftest.py
