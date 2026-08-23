@@ -2163,7 +2163,10 @@ void loop()
     {
     case TAS_WD_RADIO_WEDGE:
         DBGLN("TAS: radio wedge detected, reinit");
-        Radio.Init();
+        if (!Radio.Begin(FHSSgetMinimumFreq(), FHSSgetMaximumFreq()))
+        {
+            DBGLN("TAS: radio reinit failed");
+        }
         TasTelemetryCountReinit();
         LastValidPacket = now; // restart the silence window
         break;
