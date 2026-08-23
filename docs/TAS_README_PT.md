@@ -2,7 +2,9 @@
 
 > **Licença:** o fork como um todo é **GPL-3.0** (herdado do ExpressLRS) · os nossos ficheiros totalmente originais (`src/lib/TAS/*`, docs, testes) estão adicionalmente sob **MIT** — detalhes em `NOTICE` e na secção *Licença* abaixo.
 
-> **Idiomas:** [Polski](../TAS_README.md) · [English](TAS_README_EN.md) · [Українська](TAS_README_UK.md) · [Español](TAS_README_ES.md) · **Português**
+**O que é o TAS-ELRS?** Um enlace de rádio de código aberto e endurecido para controlo de drones, desenhado para ambientes de guerra eletrónica: comandos RC cifrados (ChaCha20), anti-replay, deteção de interferência reportada ao controlador de voo, rotação determinística de canais FHSS e espera por meses com despertar autenticado. Nasceu como fork do ExpressLRS 4.1.0.
+
+> **Idiomas:** [Polski](../TAS_README.md) · [English](TAS_README_EN.md) · [Українська](TAS_README_UK.md) · [Español](TAS_README_ES.md) · **Português** · [العربية](TAS_README_AR.md)
 
 > Documento escrito da perspectiva de uma equipa de engenharia que trabalha
 > com drones e guerra eletrónica na Ucrânia desde 2022: RF/firmware,

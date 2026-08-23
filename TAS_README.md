@@ -2,6 +2,10 @@
 
 > **Licencja:** cały fork **GPL-3.0** (dziedziczona z ExpressLRS) · nasze w pełni autorskie pliki (`src/lib/TAS/*`, docs, testy) dodatkowo **MIT** — szczegóły: `NOTICE` i sekcja *Licencja* poniżej.
 
+> **Wersje językowe:** [English](docs/TAS_README_EN.md) · [Українська](docs/TAS_README_UK.md) · [Español](docs/TAS_README_ES.md) · [Português](docs/TAS_README_PT.md) · [العربية](docs/TAS_README_AR.md)
+
+**Czym jest TAS-ELRS?** Otwarte źródło, utwardzone łącze radiowe do sterowania dronami, zaprojektowane pod środowisko walki elektronicznej: szyfrowane komendy RC (ChaCha20), antyreplay, detekcja zagłuszeń raportowana do kontrolera lotu, deterministyczna rotacja kanałów FHSS oraz czuwanie trwające miesiące z wybudzeniem kluczowanym tokenem. Powstało jako rozwidlenie ExpressLRS 4.1.0.
+
 > Dokument pisany głosem zespołu inżynierskiego działającego przy dronach i EW
 > na Ukrainie od 2022 r.: RF/firmware, kryptografia, szkolenia operatorów,
 > naprawy w warunkach polowych. Wszystkie decyzje projektowe w tym repo
