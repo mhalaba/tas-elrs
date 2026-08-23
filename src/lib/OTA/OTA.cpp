@@ -8,6 +8,7 @@
 
 #include "OTA.h"
 #include <cassert>
+#include "TasOta.h"
 
 static_assert(sizeof(OTA_Packet4_s) == OTA4_PACKET_SIZE, "OTA4 packet struct is invalid!");
 static_assert(sizeof(OTA_Packet8_s) == OTA8_PACKET_SIZE, "OTA8 packet struct is invalid!");
@@ -36,6 +37,8 @@ void OtaUpdateCrcInitFromUid()
     // shift OTA_VERSION_ID to the high byte to leave room for
     // xor-ing in the nonce in the GenerateCRC and ValidateCRC function
     OtaCrcInitializer ^= (uint16_t)OTA_VERSION_ID << 8;
+
+    TasOtaInitFromUid();
 }
 
 uint32_t OtaGetUidSeed()
@@ -516,9 +519,16 @@ bool ICACHE_RAM_ATTR OtaIsChannelDataComplete(uint32_t const *channelData)
 bool ICACHE_RAM_ATTR ValidatePacketCrcFull(OTA_Packet_s * const otaPktPtr)
 {
     uint16_t nonceValidator = (otaPktPtr->std.type == PACKET_TYPE_SYNC) ? 0 : OtaNonce;
+    uint16_t macInit = (otaPktPtr->std.type == PACKET_TYPE_SYNC)
+        ? OtaCrcInitializer : TasOtaMacInitializer(nonceValidator);
     uint16_t const calculatedCRC =
-        ota_crc.calc((uint8_t*)otaPktPtr, OTA8_CRC_CALC_LEN, OtaCrcInitializer ^ nonceValidator);
-    return otaPktPtr->full.crc == calculatedCRC;
+        ota_crc.calc((uint8_t*)otaPktPtr, OTA8_CRC_CALC_LEN, macInit);
+    if (otaPktPtr->full.crc != calculatedCRC)
+    {
+        return false;
+    }
+    TasOtaCryptRcData(otaPktPtr);
+    return true;
 }
 
 bool ICACHE_RAM_ATTR ValidatePacketCrcStd(OTA_Packet_s * const otaPktPtr)
@@ -529,22 +539,35 @@ bool ICACHE_RAM_ATTR ValidatePacketCrcStd(OTA_Packet_s * const otaPktPtr)
     otaPktPtr->std.crcHigh = 0;
 
     uint16_t nonceValidator = (otaPktPtr->std.type == PACKET_TYPE_SYNC) ? 0 : OtaNonce;
+    uint16_t macInit = (otaPktPtr->std.type == PACKET_TYPE_SYNC)
+        ? OtaCrcInitializer : TasOtaMacInitializer(nonceValidator);
     uint16_t const calculatedCRC =
-        ota_crc.calc((uint8_t*)otaPktPtr, OTA4_CRC_CALC_LEN, OtaCrcInitializer ^ nonceValidator);
+        ota_crc.calc((uint8_t*)otaPktPtr, OTA4_CRC_CALC_LEN, macInit);
 
-    return inCRC == calculatedCRC;
+    if (inCRC != calculatedCRC)
+    {
+        return false;
+    }
+    TasOtaCryptRcData(otaPktPtr);
+    return true;
 }
 
 void ICACHE_RAM_ATTR GeneratePacketCrcFull(OTA_Packet_s * const otaPktPtr)
 {
+    TasOtaCryptRcData(otaPktPtr);
     uint16_t nonceValidator = (otaPktPtr->std.type == PACKET_TYPE_SYNC) ? 0 : OtaNonce;
-    otaPktPtr->full.crc = ota_crc.calc((uint8_t*)otaPktPtr, OTA8_CRC_CALC_LEN, OtaCrcInitializer ^ nonceValidator);
+    uint16_t macInit = (otaPktPtr->std.type == PACKET_TYPE_SYNC)
+        ? OtaCrcInitializer : TasOtaMacInitializer(nonceValidator);
+    otaPktPtr->full.crc = ota_crc.calc((uint8_t*)otaPktPtr, OTA8_CRC_CALC_LEN, macInit);
 }
 
 void ICACHE_RAM_ATTR GeneratePacketCrcStd(OTA_Packet_s * const otaPktPtr)
 {
+    TasOtaCryptRcData(otaPktPtr);
     uint16_t nonceValidator = (otaPktPtr->std.type == PACKET_TYPE_SYNC) ? 0 : OtaNonce;
-    uint16_t crc = ota_crc.calc((uint8_t*)otaPktPtr, OTA4_CRC_CALC_LEN, OtaCrcInitializer ^ nonceValidator);
+    uint16_t macInit = (otaPktPtr->std.type == PACKET_TYPE_SYNC)
+        ? OtaCrcInitializer : TasOtaMacInitializer(nonceValidator);
+    uint16_t crc = ota_crc.calc((uint8_t*)otaPktPtr, OTA4_CRC_CALC_LEN, macInit);
     otaPktPtr->std.crcHigh = (crc >> 8);
     otaPktPtr->std.crcLow  = crc;
 }

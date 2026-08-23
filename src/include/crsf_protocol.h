@@ -76,6 +76,7 @@ typedef enum : uint8_t
     CRSF_FRAMETYPE_ELRS_STATUS = 0x2E, // ELRS good/bad packet count and status flags
 
     CRSF_FRAMETYPE_COMMAND = 0x32,
+    CRSF_FRAMETYPE_TAS_STATUS = 0x34, // TAS hardening: jam status, noise map digest
     CRSF_FRAMETYPE_HANDSET = 0x3A,
 
     // KISS frames
@@ -409,6 +410,15 @@ typedef struct elrsLinkStatistics_s : crsfLinkStatistics_t
 {
     uint8_t downlink_RSSI_2;
 } PACKED elrsLinkStatistics_t;
+
+// TAS hardening status (frame 0x34), RX -> FC, sent alongside link stats
+typedef struct crsfTasStatus_s
+{
+    uint8_t jamStatus;      // TasJamStatus_e: 0 clean / 1 suspect / 2 wideband / 3 sweep
+    uint8_t noisyFraction;  // 0-255 share of channels above noise floor
+    uint8_t wdReinits;      // radio watchdog reinit counter (wraps)
+    uint8_t epochPlaceholder[4]; // Faza B key-rotation epoch
+} PACKED crsfTasStatus_s;
 
 /////inline and utility functions//////
 

@@ -97,3 +97,20 @@
 
 # Use an ELRS TX and RX as a transparent UART over the air
 #-DUSE_AIRPORT_AT_BAUD=9600
+
+# ==================== TAS HARDENING (fork) ====================
+# Master switch: ChaCha20-encrypted RC payloads, keyed per-frame MAC,
+# anti-replay window, radio watchdog, TAS_STATUS telemetry to FC.
+# BOTH the TX and the RX must be built with this enabled to interoperate;
+# stock ELRS devices will not bind or communicate with hardened ones.
+-DTAS_HARDENING
+
+# Radio watchdog: reinit the silicon when RF stays silent beyond this
+# many ms while a link was established. Default 500.
+#-DTAS_RADIO_REINIT_MS=500
+
+# Wake-on-signal deep sleep (RX): MCU deep sleep + duty-cycled CAD scan.
+# Wakes only on a valid keyed wake token from the paired TX.
+# Requires per-target platform hooks (see TAS_README.md); build fails with
+# an #error until they are provided for your board.
+#-DTAS_WAKE_ON_SIGNAL

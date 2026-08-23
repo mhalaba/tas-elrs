@@ -14,6 +14,12 @@
 #include "msp.h"
 #include "msptypes.h"
 #include "options.h"
+#ifdef TAS_HARDENING
+#include "TasOta.h"
+#include "TasFailsafe.h"
+#include "TasWake.h"
+#include "TasTelemetry.h"
+#endif
 
 #include "rx-serial/SerialIO.h"
 #include "rx-serial/SerialNOOP.h"
@@ -159,8 +165,8 @@ int8_t SwitchModePending;
 
 int32_t PfdPrevRawOffset;
 RXtimerState_e RXtimerState;
-uint32_t GotConnectionMillis = 0;
-const uint32_t ConsiderConnGoodMillis = 1000; // minimum time before we can consider a connection to be 'good'
+uint32_t GotConnectionTaslis = 0;
+const uint32_t ConsiderConnGoodTaslis = 1000; // minimum time before we can consider a connection to be 'good'
 bool doStartTimer = false;
 
 ///////////////////////////////////////////////
@@ -803,7 +809,7 @@ void LostConnection(bool resumeRx)
     RXtimerState = tim_disconnected;
     hwTimer::resetFreqOffset();
     PfdPrevRawOffset = 0;
-    GotConnectionMillis = 0;
+    GotConnectionTaslis = 0;
     uplinkLQ = 0;
     LQCalc.reset();
     LQCalcDVDA.reset();
@@ -865,7 +871,7 @@ void GotConnection(unsigned long now)
 
     setConnectionState(connected); //we got a packet, therefore no lost connection
     RXtimerState = tim_tentative;
-    GotConnectionMillis = now;
+    GotConnectionTaslis = now;
     webserverPreventAutoStart = true;
 
     if (firmwareOptions.is_airport)
@@ -1047,7 +1053,7 @@ static bool ICACHE_RAM_ATTR ProcessRfPacket_SYNC(uint32_t const now, OTA_Sync_s 
     // Check if otaProtocol has been updated.
     if (config.IsModified())
     {
-        deferExecutionMillis(100, [](){
+        deferExecutionTaslis(100, [](){
             reconfigureSerial();
         });
     }
@@ -1116,6 +1122,14 @@ bool ICACHE_RAM_ATTR ProcessRFPacket(SX12xxDriverCommon::rx_status const status)
         #endif
         return false;
     }
+
+#ifdef TAS_HARDENING
+    if (!TasOtaReplayAccept(OtaNonce, otaPktPtr->std.type == PACKET_TYPE_SYNC))
+    {
+        // Replayed or duplicated frame: silently drop.
+        return false;
+    }
+#endif
 
     // The extEvent defines where TOCK timer ISR is to be synced to, i.e. where the packet period begins.
     // For rates where the TOA is longer than half the packet period schedule the TOCK for rougly 1x TOA before
@@ -1236,7 +1250,7 @@ void DataUlReceiveComplete()
     case MSP_ELRS_SET_RX_WIFI_MODE: //0x0E
         // The MSP packet needs to be ACKed so the TX doesn't
         // keep sending it, so defer the switch to wifi
-        deferExecutionMillis(500, []() {
+        deferExecutionTaslis(500, []() {
             setWifiUpdateMode();
         });
         break;
@@ -1526,7 +1540,7 @@ static void setupConfigAndPocCheck()
     }
 
     // Set a deferred function to clear the power on counter if the RX has been running for more than 2s
-    deferExecutionMillis(2000, []() {
+    deferExecutionTaslis(2000, []() {
         if (connectionState != connected && config.GetPowerOnCounter() != 0)
         {
             config.SetPowerOnCounter(0);
@@ -1839,6 +1853,14 @@ static void checkSendLinkStatsToFc(uint32_t now)
             crsfRouter.makeLinkStatisticsPacket(&linkStatisticsFrame.h);
             // the linkStats 'originates' from the OTA connector so we don't send it back there.
             crsfRouter.deliverMessage(&otaConnector, &linkStatisticsFrame.h);
+#ifdef TAS_HARDENING
+            {
+                CRSF_MK_FRAME_T(crsfTasStatus_s) milFrame;
+                TasTelemetryBuildPayload((uint8_t *)&milFrame.p);
+                crsfRouter.SetHeaderAndCrc(&milFrame.h, CRSF_FRAMETYPE_TAS_STATUS, CRSF_FRAME_SIZE(sizeof(crsfTasStatus_s)));
+                crsfRouter.deliverMessage(&otaConnector, &milFrame.h);
+            }
+#endif
             SendLinkStatstoFCintervalLastSent = now;
             if (SendLinkStatstoFCForcedSends)
                 --SendLinkStatstoFCForcedSends;
@@ -2115,6 +2137,20 @@ void loop()
         LostConnection(true);
     }
 
+#ifdef TAS_HARDENING
+    switch (TasWatchdogEvaluate(now, localLastValidPacket, connectionState == connected))
+    {
+    case TAS_WD_RADIO_WEDGE:
+        DBGLN("TAS: radio wedge detected, reinit");
+        Radio.Init();
+        TasTelemetryCountReinit();
+        LastValidPacket = now; // restart the silence window
+        break;
+    default:
+        break;
+    }
+#endif
+
     if ((connectionState == tentative) && (abs(LPF_OffsetDx.value()) <= 10) && (LPF_Offset.value() < 100) && (LQCalc.getLQRaw() > minLqForChaos())) //detects when we are connected
     {
         GotConnection(now);
@@ -2122,7 +2158,7 @@ void loop()
 
     checkSendLinkStatsToFc(now);
 
-    if ((RXtimerState == tim_tentative) && ((now - GotConnectionMillis) > ConsiderConnGoodMillis) && (abs(LPF_OffsetDx.value()) <= 5))
+    if ((RXtimerState == tim_tentative) && ((now - GotConnectionTaslis) > ConsiderConnGoodTaslis) && (abs(LPF_OffsetDx.value()) <= 5))
     {
         RXtimerState = tim_locked;
         DBGLN("Timer locked");
