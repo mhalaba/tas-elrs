@@ -1,5 +1,7 @@
 # TAS-RX-900-C3 — pinout i kontrakt z firmware
 
+> **Wersje:** [English](PINOUT_EN.md) · [Українська](PINOUT_UK.md) · [Español](PINOUT_ES.md) · [Português](PINOUT_PT.md) · [العربية](PINOUT_AR.md)
+
 Mapa pinów jest **jedynym źródłem prawdy** dla obu stron:
 1. ten plik (dokumentacja),
 2. `src/hardware/RX/TAS RX 900 C3.json` (hardware-def flashowany przez ELRS Configurator),

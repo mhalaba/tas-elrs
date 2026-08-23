@@ -1,5 +1,7 @@
 # TAS-ELRS — Hardware
 
+> **Wersje:** [English](README_EN.md) · [Українська](README_UK.md) · [Español](README_ES.md) · [Português](README_PT.md) · [العربية](README_AR.md)
+
 Referencyjna elektronika dla targetów firmware z tego forka.
 
 ## TAS-RX-900-C3 (gotowe v1.0)

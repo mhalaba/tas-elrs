@@ -29,3 +29,26 @@ SOFTWARE.
 
 Attribution: ExpressLRS contributors — base code, FHSS/OTA architecture,
 years of open development. Thank you.
+
+---
+Localized license summaries / Lokalizowane podsumowania licencji:
+
+**Polski:** Cały fork na GPL-3.0 (wymóg dziedziczony z ExpressLRS). Nasze
+w całości autorskie pliki (src/lib/TAS, docs, testy) są dodatkowo dostępne
+na licencji MIT powyżej. Uznanie autorstwa: społeczność ExpressLRS.
+
+**Українська:** Весь форк — GPL-3.0 (вимога, успадкована від ExpressLRS).
+Наші повністю авторські файли (src/lib/TAS, docs, тести) додатково доступні
+за ліцензією MIT вище. Існування: спільнота ExpressLRS.
+
+**Español:** El fork completo es GPL-3.0 (requisito heredado de ExpressLRS).
+Nuestros archivos totalmente originales (src/lib/TAS, docs, tests) están
+además disponibles bajo la licencia MIT anterior. Atribución: comunidad ExpressLRS.
+
+**Português:** O fork completo é GPL-3.0 (requisito herdado do ExpressLRS).
+Os nossos ficheiros totalmente originais (src/lib/TAS, docs, testes) estão
+adicionalmente disponíveis sob a licença MIT acima. Atribuição: comunidade ExpressLRS.
+
+**العربية:** التفرع بأكمله بموجب GPL-3.0 (شرط موروث من ExpressLRS). ملفاتنا
+الأصلية بالكامل (src/lib/TAS وdocs والاختبارات) متاحة إضافياً بموجب رخصة MIT أعلاه.
+الإسناد: مجتمع ExpressLRS.
