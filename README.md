@@ -1,3 +1,19 @@
+# TAS-ELRS
+
+**Hardened ExpressLRS 4.1.0 fork** — ChaCha20 RC payloads, keyed MAC, anti-replay, jam classification to the flight controller, deterministic FHSS prune, months-long RX standby with a keyed wake token.
+
+- **Start here:** [TAS_README.md](TAS_README.md) (PL) · [English](docs/TAS_README_EN.md) · [Українська](docs/TAS_README_UK.md)
+- **Build:** uncomment `-DTAS_HARDENING` in `src/user_defines.txt` (TX **and** RX together). Stock ELRS will not talk to a hardened build.
+- **Tests:** `bash src/test/run_tas_tests.sh` (alias: `run_mil_tests.sh`)
+- **Hardware:** [`hardware/`](hardware/README.md) — TAS-RX-900-C3
+- **License:** GPL-3.0 (fork as a whole) · TAS originals also MIT — see `NOTICE`
+
+Current TAS release: **v2.2** (epoch-0 key + jam-classifier security patch).
+
+The remainder of this file is the upstream ExpressLRS README, retained for attribution.
+
+---
+
 ![Banner](https://github.com/ExpressLRS/ExpressLRS-Hardware/blob/master/img/banner.png?raw=true)
 
 <center>

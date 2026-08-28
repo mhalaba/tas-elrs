@@ -1,6 +1,21 @@
 #include "TasSession.h"
 #include <string.h>
 
+static void TasSessionDeriveEpoch(TasSessionCtx_s *ctx, uint32_t epoch)
+{
+    uint8_t info[8];
+    info[0] = 'e';
+    info[1] = 'p';
+    info[2] = 'o';
+    info[3] = 'c';
+    info[4] = (uint8_t)(epoch >> 24);
+    info[5] = (uint8_t)(epoch >> 16);
+    info[6] = (uint8_t)(epoch >> 8);
+    info[7] = (uint8_t)(epoch);
+
+    TasHkdfExpand(ctx->masterKey, info, sizeof(info), ctx->epochKey, TAS_KEY_LEN);
+}
+
 void TasSessionDeriveMaster(
     TasSessionCtx_s *ctx,
     const uint8_t uid[6],
@@ -24,8 +39,11 @@ void TasSessionDeriveMaster(
 
     ctx->epochIndex = 0;
     ctx->frameCounter = 0;
-    // epoch 0 key + "previous" starts as epoch 0 too (no overlap at bind)
-    TasSessionAdvance(ctx, 0);
+    // Epoch 0 MUST be derived here. Advance(0) is a no-op (newEpoch ==
+    // epochIndex == 0), which previously left epochKey as BSS zeros — a
+    // public all-zero ChaCha20/MAC key for the first TAS_REKEY_FRAMES.
+    TasSessionDeriveEpoch(ctx, 0);
+    memcpy(ctx->prevEpochKey, ctx->epochKey, TAS_KEY_LEN);
 }
 
 void TasSessionAdvance(
@@ -39,18 +57,7 @@ void TasSessionAdvance(
     {
         memcpy(ctx->prevEpochKey, ctx->epochKey, TAS_KEY_LEN);
         ctx->epochIndex = newEpoch;
-
-        uint8_t info[8];
-        info[0] = 'e';
-        info[1] = 'p';
-        info[2] = 'o';
-        info[3] = 'c';
-        info[4] = (uint8_t)(newEpoch >> 24);
-        info[5] = (uint8_t)(newEpoch >> 16);
-        info[6] = (uint8_t)(newEpoch >> 8);
-        info[7] = (uint8_t)(newEpoch);
-
-        TasHkdfExpand(ctx->masterKey, info, sizeof(info), ctx->epochKey, TAS_KEY_LEN);
+        TasSessionDeriveEpoch(ctx, newEpoch);
     }
 }
 

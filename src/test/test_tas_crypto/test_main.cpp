@@ -55,6 +55,32 @@ int main()
         CHECK(memcmp(okm, e, 42) == 0, "HKDF RFC5869 TC1");
     }
 
+    // --- HKDF-SHA256 long salt/info (80B). Pins HMAC-SHA256 interop with
+    //     Python hashlib and proves Expand no longer concatenates into a
+    //     64-byte stack buffer (old code overflowed for info > 31 bytes). ---
+    {
+        uint8_t ikm[80], salt[80], info[80];
+        for (unsigned i = 0; i < 80; i++)
+        {
+            ikm[i]  = (uint8_t)i;
+            salt[i] = (uint8_t)(0x60 + i);
+            info[i] = (uint8_t)(0xb0 + i);
+        }
+        uint8_t prk[32], okm[82];
+        TasHkdfExtract(salt, 80, ikm, 80, prk);
+        TasHkdfExpand(prk, info, 80, okm, 82);
+        const char *prkExpect = "06a6b88c5853361a06104c9ceb35b45cef760014904671014a193f40c15fc244";
+        const char *okmExpect =
+            "b11e398dc80327a1c8e7f78c596a49344f012eda2d4efad8a050cc4c19afa97c"
+            "59045a99cac7827271cb41c65e590e09da3275600c2f09b8367793a9aca3db71"
+            "cc30c58179ec3e87c14c01d5c1f3434f1d87";
+        uint8_t ePrk[32], eOkm[82];
+        hex2bin(prkExpect, ePrk, 32);
+        hex2bin(okmExpect, eOkm, 82);
+        CHECK(memcmp(prk, ePrk, 32) == 0, "HKDF long-salt PRK (hashlib interop)");
+        CHECK(memcmp(okm, eOkm, 82) == 0, "HKDF long-info OKM (no stack overflow)");
+    }
+
     // --- ChaCha20 keystream RFC 8439 2.4.2 ---
     {
         uint8_t key[32], nonce[12], block[64];
@@ -76,6 +102,12 @@ int main()
         TasSessionDeriveMaster(&a, uid, 0xDEADBEEF);
         TasSessionDeriveMaster(&b, uid, 0xDEADBEEF);
         CHECK(memcmp(a.masterKey, b.masterKey, 32) == 0, "master deterministic");
+
+        uint8_t zeros[32] = {0};
+        CHECK(memcmp(a.epochKey, zeros, 32) != 0, "epoch 0 key is not all-zero");
+        CHECK(memcmp(a.epochKey, a.masterKey, 32) != 0, "epoch 0 differs from master");
+        CHECK(memcmp(a.epochKey, b.epochKey, 32) == 0, "epoch 0 deterministic");
+        CHECK(memcmp(a.prevEpochKey, a.epochKey, 32) == 0, "prev starts as epoch 0");
 
         uint8_t k0[32]; memcpy(k0, a.epochKey, 32);
         TasSessionAdvance(&a, TAS_REKEY_FRAMES + 1);

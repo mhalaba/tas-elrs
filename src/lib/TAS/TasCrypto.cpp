@@ -144,11 +144,38 @@ void TasHmacSha256(
     uint8_t kipad[64], kopad[64];
     TasHmacPad(key, keyLen, kipad, kopad);
 
-
     TasSha256Ctx_s ctx;
     TasSha256Init(&ctx);
     TasSha256Update(&ctx, kipad, 64);
     TasSha256Update(&ctx, data, dataLen);
+    uint8_t inner[TAS_KEY_LEN];
+    TasSha256Final(&ctx, inner);
+
+    TasSha256Init(&ctx);
+    TasSha256Update(&ctx, kopad, 64);
+    TasSha256Update(&ctx, inner, TAS_KEY_LEN);
+    TasSha256Final(&ctx, out);
+}
+
+// HMAC(PRK, a | b | c) without concatenating into a bounded stack buffer.
+// Used by HKDF-Expand so info of any length (RFC 5869 TC2 is 80 bytes) is safe.
+static void TasHmacSha256Concat(
+    const uint8_t *key, size_t keyLen,
+    const uint8_t *a, size_t aLen,
+    const uint8_t *b, size_t bLen,
+    const uint8_t *c, size_t cLen,
+    uint8_t out[TAS_KEY_LEN])
+{
+    uint8_t kipad[64], kopad[64];
+    TasHmacPad(key, keyLen, kipad, kopad);
+
+    TasSha256Ctx_s ctx;
+    TasSha256Init(&ctx);
+    TasSha256Update(&ctx, kipad, 64);
+    if (aLen) TasSha256Update(&ctx, a, aLen);
+    if (bLen) TasSha256Update(&ctx, b, bLen);
+    if (cLen) TasSha256Update(&ctx, c, cLen);
+
     uint8_t inner[TAS_KEY_LEN];
     TasSha256Final(&ctx, inner);
 
@@ -165,22 +192,17 @@ void TasHkdfExtract(
     const uint8_t *ikm, size_t ikmLen,
     uint8_t prk[TAS_KEY_LEN])
 {
-    uint8_t realSalt[TAS_KEY_LEN] {};
-    size_t rsLen = saltLen;
+    // RFC 5869: salt defaults to HashLen zeros; otherwise it is the HMAC key
+    // (HMAC-SHA256 itself hashes keys longer than the 64-byte block).
+    static const uint8_t zeros[TAS_KEY_LEN] = {0};
     if (salt == nullptr || saltLen == 0)
     {
-        rsLen = TAS_KEY_LEN; // zero-filled
-    }
-    else if (saltLen > TAS_KEY_LEN)
-    {
-        TasSha256(salt, saltLen, realSalt);
-        rsLen = TAS_KEY_LEN;
+        TasHmacSha256(zeros, TAS_KEY_LEN, ikm, ikmLen, prk);
     }
     else
     {
-        memcpy(realSalt, salt, saltLen);
+        TasHmacSha256(salt, saltLen, ikm, ikmLen, prk);
     }
-    TasHmacSha256(realSalt, rsLen, ikm, ikmLen, prk);
 }
 
 void TasHkdfExpand(
@@ -196,15 +218,12 @@ void TasHkdfExpand(
     while (pos < okmLen)
     {
         // T(i) = HMAC(PRK, T(i-1) | info | i)
-        uint8_t msg[2 * TAS_KEY_LEN];
-        size_t msgLen = 0;
-        memcpy(msg + msgLen, t, tLen);
-        msgLen += tLen;
-        memcpy(msg + msgLen, info, infoLen);
-        msgLen += infoLen;
-        msg[msgLen++] = counter;
-
-        TasHmacSha256(prk, TAS_KEY_LEN, msg, msgLen, t);
+        TasHmacSha256Concat(
+            prk, TAS_KEY_LEN,
+            t, tLen,
+            info, infoLen,
+            &counter, 1,
+            t);
         tLen = TAS_KEY_LEN;
 
         size_t take = okmLen - pos < TAS_KEY_LEN ? okmLen - pos : TAS_KEY_LEN;

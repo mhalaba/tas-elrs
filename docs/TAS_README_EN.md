@@ -255,6 +255,13 @@ If this project helped you: [**buy us a coffee → buycoffee.to/maha**](https://
 
 ## Changelog
 
+**v2.2** — security patch (flash TX **and** RX together):
+- **CRITICAL:** epoch-0 session key was never derived. `TasSessionAdvance(0)` is a no-op (`newEpoch == epochIndex`), so `epochKey` stayed BSS zeros. ChaCha20 and the keyed MAC ran on a public all-zero key for the whole v1 static-key lifetime. Fixed by deriving epoch 0 in `TasSessionDeriveMaster`. Test: `epoch 0 key is not all-zero`.
+- **CRITICAL:** `TasAfhJamFromLink` compared `|RSSI| > 55` (weak signal) instead of `|RSSI| < 55` (strong signal). Close-range barrage was reported CLEAN; range fade was reported WIDEBAND. Heuristic inverted to match the documented saturation signature. `TAS_STATUS` to the FC is now meaningful.
+- HKDF-Expand no longer concatenates `T | info | i` into a 64-byte stack buffer (overflow for `infoLen > 31`). HMAC is streamed. Extract uses salt as the HMAC key per RFC 5869 (HMAC hashes keys > 64 B; no pre-hash at 32 B).
+- Wipe ChaCha20 key/nonce after `TasOtaCryptRcData`. `TasAfhClassify` is honestly non-const. `TasAfhNoisyFraction` guards `channelCount == 0`.
+- `src/test/run_mil_tests.sh` alias (the documented name) → `run_tas_tests.sh`.
+
 **v2.1** — v2 self-audit fixes:
 - jam classification wired end-to-end (RX → LQ×RSSI heuristic → `TAS_STATUS` to FC; previously dead code),
 - hardened binding-phrase KDF: 10 000 × SHA-256 when `-DTAS_HARDENING` is set (stock md5 otherwise); both sides must be built from the same user_defines,
