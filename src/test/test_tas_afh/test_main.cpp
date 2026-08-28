@@ -25,6 +25,18 @@ static void feed(TasAfhCtx_s *ctx, uint8_t chCount, int16_t base, int16_t noiseA
 
 int main()
 {
+    // --- Link-health jam heuristic (rssiAbs = |RSSI| dB, smaller = stronger) ---
+    CHECK(TasAfhJamFromLink(20, 40) == TAS_JAM_WIDEBAND,
+          "jam: strong RSSI + dead LQ is barrage");
+    CHECK(TasAfhJamFromLink(20, 90) == TAS_JAM_CLEAN,
+          "jam: weak RSSI + dead LQ is range, not jam");
+    CHECK(TasAfhJamFromLink(95, 40) == TAS_JAM_CLEAN,
+          "jam: strong RSSI + high LQ is a healthy link");
+    CHECK(TasAfhJamFromLink(45, 40) == TAS_JAM_SUSPECT,
+          "jam: strong RSSI + mediocre LQ is suspect");
+    CHECK(TasAfhJamFromLink(45, 80) == TAS_JAM_CLEAN,
+          "jam: weak RSSI + mediocre LQ is range");
+
     // --- Classifier: clean environment ---
     {
         TasAfhCtx_s ctx; TasAfhInit(&ctx, 80);

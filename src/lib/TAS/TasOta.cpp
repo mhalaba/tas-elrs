@@ -5,6 +5,7 @@
 #include "TasCrypto.h"
 #include "TasSession.h"
 #include "FHSS.h"
+#include <string.h>
 
 // v1 session model:
 //  - One static link key derived from the binding secret (HKDF over UID).
@@ -77,6 +78,9 @@ void TasOtaCryptRcData(OTA_Packet_s *otaPktPtr)
 
     uint32_t counter = ((uint32_t)OTA_VERSION_ID << 24) | 0x00524344; // 'RCD'
     TasChaCha20Xor(key, counter, nonce, payload, payload, len);
+
+    memset(key, 0, sizeof(key));
+    memset(nonce, 0, sizeof(nonce));
 }
 
 bool TasOtaReplayAccept(uint8_t incomingNonce, bool isSyncPacket)

@@ -26,7 +26,8 @@ typedef struct {
 
 // Classify jam state from link health (pure function, natively testable).
 // Strong-but-lossy signal is the saturation signature of an active barrage;
-// weak-and-lossy is just range. lqRaw: 0-100, rssiAbs: |RSSI| in dB.
+// weak-and-lossy is just range. lqRaw: 0-100, rssiAbs: |RSSI| in dB
+// (smaller = stronger: -40 dBm => 40, -110 dBm => 110).
 TasJamStatus_e TasAfhJamFromLink(uint8_t lqRaw, uint8_t rssiAbs);
 
 void TasAfhInit(TasAfhCtx_s *ctx, uint8_t channelCount);
@@ -35,7 +36,8 @@ void TasAfhInit(TasAfhCtx_s *ctx, uint8_t channelCount);
 void TasAfhNote(TasAfhCtx_s *ctx, uint8_t channelIdx, int16_t rssiRaw);
 
 // Classify current RF environment from accumulated per-channel noise.
-TasJamStatus_e TasAfhClassify(const TasAfhCtx_s *ctx, uint8_t channelCount);
+// Updates prevSpikeEma so a subsequent call can detect a sweep.
+TasJamStatus_e TasAfhClassify(TasAfhCtx_s *ctx, uint8_t channelCount);
 
 // Fraction (0-255) of channels currently considered noisy.
 uint8_t TasAfhNoisyFraction(const TasAfhCtx_s *ctx, uint8_t channelCount);

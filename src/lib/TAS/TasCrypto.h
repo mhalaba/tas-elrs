@@ -2,6 +2,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include <stdbool.h>
 
 #define TAS_KEY_LEN     32
 #define TAS_SALT_MAX    32

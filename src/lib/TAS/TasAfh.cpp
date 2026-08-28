@@ -7,14 +7,15 @@ TasJamStatus_e TasAfhJamFromLink(uint8_t lqRaw, uint8_t rssiAbs)
     // Saturation signature: the receiver hears a LOT of energy yet loses
     // frames — characteristic of barrage/jamming, not of range falloff
     // (range presents as weak RSSI with graceful LQ decay).
-    const uint8_t STRONG = 55;   // |RSSI| dB: closer than ~55 dB loss
+    // rssiAbs is |RSSI| in dB: smaller = stronger (-40 dBm => 40).
+    const uint8_t STRONG = 55;   // |RSSI| dB: closer than ~55 dB path loss
     const uint8_t LQ_BAD = 30;
 
-    if (lqRaw < LQ_BAD && rssiAbs > STRONG)
+    if (lqRaw < LQ_BAD && rssiAbs < STRONG)
     {
         return TAS_JAM_WIDEBAND;
     }
-    if (lqRaw < 60 && rssiAbs > STRONG)
+    if (lqRaw < 60 && rssiAbs < STRONG)
     {
         return TAS_JAM_SUSPECT;
     }
@@ -62,7 +63,7 @@ void TasAfhNote(TasAfhCtx_s *ctx, uint8_t channelIdx, int16_t rssiRaw)
     }
 }
 
-TasJamStatus_e TasAfhClassify(const TasAfhCtx_s *ctx, uint8_t channelCount)
+TasJamStatus_e TasAfhClassify(TasAfhCtx_s *ctx, uint8_t channelCount)
 {
     if (channelCount > TAS_MAX_CHANNELS)
     {
@@ -106,7 +107,7 @@ TasJamStatus_e TasAfhClassify(const TasAfhCtx_s *ctx, uint8_t channelCount)
 
     // Temporal delta of band mean => energy moving through band => sweep
     uint16_t delta = mean > ctx->prevSpikeEma ? mean - ctx->prevSpikeEma : ctx->prevSpikeEma - mean;
-    ((TasAfhCtx_s *)ctx)->prevSpikeEma = mean;
+    ctx->prevSpikeEma = mean;
 
     if (noisyCount > channelCount / 2)
     {
@@ -125,6 +126,10 @@ TasJamStatus_e TasAfhClassify(const TasAfhCtx_s *ctx, uint8_t channelCount)
 
 uint8_t TasAfhNoisyFraction(const TasAfhCtx_s *ctx, uint8_t channelCount)
 {
+    if (channelCount == 0)
+    {
+        return 0;
+    }
     if (channelCount > TAS_MAX_CHANNELS)
     {
         channelCount = TAS_MAX_CHANNELS;
